@@ -1,0 +1,8 @@
+# Credit Risk Prediction System
+# Install all dependencies with: pip install -r requirements.txt
+
+pandas==3.0.1
+numpy==2.4.2
+matplotlib==3.10.8
+seaborn==0.13.2
+scikit-learn==1.8.0
