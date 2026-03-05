@@ -100,7 +100,7 @@ The prediction page uses a pre-trained Gradient Boosting model (`credit_risk_mod
 
 ## Creators
 
-**Francisco | Soroño**
+**Francisco, Jan-Rel | Soroño, Eli**
 
 ## Disclaimer
 
