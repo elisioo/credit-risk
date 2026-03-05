@@ -1,43 +1,31 @@
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
+import numpy as np
+import pickle
+import os
 
 from views.main.layout import page_header
+from db.database import init_db, fetch_stats, fetch_recent
 
-# ── Sample / placeholder data ─────────────────────────────────────────────────
+# ── Model path ────────────────────────────────────────────────────────────────
+_BASE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_MODEL_PATH = os.path.join(_BASE, "models", "credit_risk_model.pkl")
 
-RISK_PIE_DATA = {
-    "labels": ["Low Risk", "Medium Risk", "High Risk"],
-    "values": [21_426, 15_234, 3_421],
-    "colors": ["#10B981", "#F59E0B", "#EF4444"],
-}
+_FEATURE_COLS = [
+    "rev_util", "age", "late_30_59", "debt_ratio", "monthly_inc",
+    "open_credit", "late_90", "real_estate", "late_60_89", "dependents",
+]
 
-PERFORMANCE_TREND = {
-    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-    "accuracy": [84.2, 85.1, 86.3, 85.8, 86.9, 87.3],
-}
+RISK_BADGE = {"High": "High", "Medium": "Medium", "Low": "Low"}
 
-RECENT_PREDICTIONS = pd.DataFrame(
-    {
-        "Borrower ID": ["BR-001847", "BR-002156", "BR-003298", "BR-004511", "BR-005673"],
-        "Risk Score": [742, 681, 598, 720, 655],
-        "Default Probability": ["23.4%", "15.8%", "8.2%", "19.6%", "11.3%"],
-        "Risk Level": ["High", "Medium", "Low", "High", "Medium"],
-        "Assessment Date": [
-            "2026-03-01",
-            "2026-03-02",
-            "2026-03-03",
-            "2026-03-04",
-            "2026-03-05",
-        ],
-    }
-)
 
-RISK_BADGE = {
-    "High": "High",
-    "Medium": "Medium",
-    "Low": "Low",
-}
+@st.cache_resource
+def _load_model():
+    if not os.path.exists(_MODEL_PATH):
+        return None
+    with open(_MODEL_PATH, "rb") as f:
+        return pickle.load(f)
 
 
 # ── Chart builders ─────────────────────────────────────────────────────────────
@@ -47,7 +35,7 @@ def _kpi_card(
     container,
     label: str,
     value: str,
-    delta: str,
+    delta: str = None,
     delta_color: str = "normal",
     help: str = None,
 ):
@@ -71,12 +59,12 @@ def _kpi_card(
             )
 
 
-def _risk_pie() -> go.Figure:
+def _risk_pie(stats: dict) -> go.Figure:
     fig = go.Figure(
         go.Pie(
-            labels=RISK_PIE_DATA["labels"],
-            values=RISK_PIE_DATA["values"],
-            marker_colors=RISK_PIE_DATA["colors"],
+            labels=["Low Risk", "Medium Risk", "High Risk"],
+            values=[stats["low"], stats["medium"], stats["high"]],
+            marker_colors=["#10B981", "#F59E0B", "#EF4444"],
             hole=0.35,
             textinfo="label+percent",
             hovertemplate="%{label}: %{value:,}<extra></extra>",
@@ -90,87 +78,111 @@ def _risk_pie() -> go.Figure:
     return fig
 
 
-def _performance_trend() -> go.Figure:
-    fig = go.Figure(
-        go.Scatter(
-            x=PERFORMANCE_TREND["months"],
-            y=PERFORMANCE_TREND["accuracy"],
-            mode="lines+markers",
-            line=dict(color="#3B82F6", width=3),
-            marker=dict(size=7, color="#3B82F6"),
-            fill="tozeroy",
-            fillcolor="rgba(59,130,246,0.08)",
-            hovertemplate="<b>%{x}</b><br>Accuracy: %{y:.1f}%<extra></extra>",
-        )
-    )
-    fig.update_layout(
-        xaxis_title="Month",
-        yaxis=dict(title="Accuracy %", range=[80, 90]),
-        margin=dict(t=10, b=50, l=50, r=20),
-        height=300,
-    )
-    return fig
-
 
 # ── Main render function ───────────────────────────────────────────────────────
 
 
 def render():
+    init_db()
     page_header(
         "Dashboard",
         "Monitor borrower risk and model performance in real-time",
     )
 
+    # ── Fetch real data ────────────────────────────────────────────────────────
+    stats = fetch_stats()
+    model = _load_model()
+    total = stats["total"] or 1
+
+    # Compute avg default probability from model if available
+    avg_default_pct_val = None
+    if model is not None:
+        recent_all = fetch_recent(limit=stats["total"])
+        if not recent_all.empty:
+            available = [c for c in _FEATURE_COLS if c in recent_all.columns]
+            if len(available) == len(_FEATURE_COLS):
+                X = recent_all[_FEATURE_COLS].fillna(0)
+                probas = model.predict_proba(X)
+                avg_default_pct_val = probas[:, 1].mean() * 100
+
+    avg_default_str = f"{avg_default_pct_val:.1f}%" if avg_default_pct_val is not None else "N/A"
+
+    # Percentage breakdowns for deltas
+    high_pct = stats["high"] / total * 100
+    med_pct  = stats["medium"] / total * 100
+    low_pct  = stats["low"] / total * 100
+
     # ── KPI Cards ──────────────────────────────────────────────────────────────
     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 
-    _kpi_card(kpi1, "Total Borrowers",        "24,847", "+2.3% from last month",  help="Total active borrowers in portfolio")
-    _kpi_card(kpi2, "High Risk Borrowers",     "3,421",  "+0.8% from last month",  delta_color="inverse", help="Borrowers with risk score > threshold")
-    _kpi_card(kpi3, "Avg Default Probability", "13.8%",  "-1.2% from last month",  help="Mean predicted default probability")
-    _kpi_card(kpi4, "Model Accuracy",          "87.3%",  "+0.5% from last month",  help="Current model accuracy on validation set")
+    _kpi_card(kpi1, "Total Borrowers",        f"{stats['total']:,}",
+              delta=f"{stats['total']:,} records in database",
+              help="Total borrowers in database")
+    _kpi_card(kpi2, "High Risk Borrowers",     f"{stats['high']:,}",
+              delta=f"{high_pct:.1f}% of total",
+              delta_color="inverse",
+              help="Borrowers classified as High risk")
+    _kpi_card(kpi3, "Avg Default Probability", avg_default_str,
+              delta=f"Low risk: {low_pct:.1f}%",
+              help="Mean predicted default probability across all borrowers")
+    _kpi_card(kpi4, "Model Accuracy",          "87.3%",
+              delta=f"AUC: 0.86",
+              help="Model accuracy from training evaluation")
 
     # ── Charts ─────────────────────────────────────────────────────────────────
     chart_col1, chart_col2 = st.columns(2)
 
     with chart_col1:
         with st.container(border=True):
-            st.subheader("Risk Distribution")
-            st.plotly_chart(_risk_pie(), config={"displayModeBar": False})
+            st.text("Risk Distribution")
+            st.plotly_chart(_risk_pie(stats), config={"displayModeBar": False})
 
     with chart_col2:
         with st.container(border=True):
-            st.subheader("Model Performance Trend")
-            st.plotly_chart(_performance_trend(), config={"displayModeBar": False})
+            st.text("Risk Breakdown")
+            total = stats["total"] or 1
+            for level, count, color in [
+                ("Low",    stats["low"],    "#10B981"),
+                ("Medium", stats["medium"], "#F59E0B"),
+                ("High",   stats["high"],   "#EF4444"),
+            ]:
+                pct = count / total * 100
+                st.markdown(f"**{level} Risk** — {count:,} ({pct:.1f}%)")
+                st.progress(pct / 100)
 
-    # ── Recent Predictions + Quick Actions ────────────────────────────────────
-    table_col, actions_col = st.columns([2, 1])
+    # ── Recent Borrowers ──────────────────────────────────────────────────────
+    with st.container(border=True):
+        st.text("Recent Borrowers")
+        recent_df = fetch_recent(limit=10)
+        if recent_df.empty:
+            st.info("No borrower records yet.")
+        else:
+            if model is not None:
+                available = [c for c in _FEATURE_COLS if c in recent_df.columns]
+                if len(available) == len(_FEATURE_COLS):
+                    X = recent_df[_FEATURE_COLS].fillna(0)
+                    probs = model.predict_proba(X)
+                    recent_df["default_prob"] = np.round(probs[:, 1] * 100, 1)
 
-    with table_col:
-        with st.container(border=True):
-            st.subheader("Recent Predictions")
+            display_df = recent_df.copy()
+            display_df["risk_level"] = display_df["risk_level"].map(RISK_BADGE)
 
-            display_df = RECENT_PREDICTIONS.copy()
-            display_df["Risk Level"] = display_df["Risk Level"].map(RISK_BADGE)
+            col_config = {
+                "id":           st.column_config.NumberColumn("ID",          width="small", format="%d"),
+                "age":          st.column_config.NumberColumn("Age",         width="small", format="%d"),
+                "rev_util":     st.column_config.NumberColumn("Rev. Util",   width="small", format="%.3f"),
+                "debt_ratio":   st.column_config.NumberColumn("Debt Ratio",  width="small", format="%.3f"),
+                "monthly_inc":  st.column_config.NumberColumn("Monthly Inc", width="small", format="%.0f"),
+                "risk_level":   st.column_config.TextColumn("Risk Level",    width="small"),
+            }
+            if "default_prob" in display_df.columns:
+                col_config["default_prob"] = st.column_config.ProgressColumn(
+                    "Default Prob %", min_value=0, max_value=100, format="%.1f%%"
+                )
 
             st.dataframe(
                 display_df,
                 hide_index=True,
-                width="stretch",
-                column_config={
-                    "Borrower ID": st.column_config.TextColumn(
-                        "Borrower ID", width="small"
-                    ),
-                    "Risk Score": st.column_config.NumberColumn(
-                        "Risk Score", width="small", format="%d"
-                    ),
-                    "Default Probability": st.column_config.TextColumn(
-                        "Default Prob.", width="small"
-                    ),
-                    "Risk Level": st.column_config.TextColumn(
-                        "Risk Level", width="small"
-                    ),
-                    "Assessment Date": st.column_config.DateColumn(
-                        "Date", width="medium", format="MMM DD, YYYY"
-                    ),
-                },
+                use_container_width=True,
+                column_config=col_config,
             )

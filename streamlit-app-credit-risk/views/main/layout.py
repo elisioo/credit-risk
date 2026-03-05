@@ -4,8 +4,8 @@ import streamlit as st
 def page_config():
     """Call once at the very top of app.py."""
     st.set_page_config(
-        page_title="CreditAI – Credit Risk Dashboard",
-        page_icon="📊",
+        page_title="Credalytix – Credit Risk Dashboard",
+        page_icon="",
         layout="wide",
         initial_sidebar_state="expanded",
     )

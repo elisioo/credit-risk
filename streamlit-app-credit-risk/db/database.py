@@ -164,10 +164,29 @@ def fetch_stats() -> dict:
         low       = con.execute("SELECT COUNT(*) FROM borrowers WHERE risk_level='Low'").fetchone()[0]
         avg_inc   = con.execute("SELECT AVG(monthly_inc) FROM borrowers").fetchone()[0] or 0
         avg_debt  = con.execute("SELECT AVG(debt_ratio) FROM borrowers").fetchone()[0] or 0
+        avg_rev   = con.execute("SELECT AVG(rev_util) FROM borrowers").fetchone()[0] or 0
     return {
         "total": total, "high": high, "medium": med, "low": low,
         "avg_monthly_inc": avg_inc, "avg_debt_ratio": avg_debt,
+        "avg_rev_util": avg_rev,
     }
+
+
+def fetch_recent(limit: int = 5) -> pd.DataFrame:
+    """Return the most recently added borrowers."""
+    with _conn() as con:
+        rows = con.execute(
+            """
+            SELECT id, age, rev_util, debt_ratio, monthly_inc,
+                   open_credit, late_90, dlq_2yrs, risk_level,
+                   late_30_59, late_60_89, real_estate, dependents
+            FROM borrowers
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+    return pd.DataFrame([dict(r) for r in rows]) if rows else pd.DataFrame()
 
 
 # ── Create ────────────────────────────────────────────────────────────────────

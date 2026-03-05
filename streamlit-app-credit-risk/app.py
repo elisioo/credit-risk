@@ -1,8 +1,3 @@
-"""
-CreditAI – Credit Risk Dashboard
-Entry point: run with `streamlit run app.py` from this directory.
-"""
-
 import sys
 import os
 
@@ -12,7 +7,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from views.main.layout import page_config
 from views.main.sidebar import render_sidebar
 
-# ── Page modules ──────────────────────────────────────────────────────────────
+# Page modules 
 from views.pages import dashboard
 from views.pages import risk_analysis
 from views.pages import borrower_data
@@ -21,7 +16,7 @@ from views.pages import predict
 from views.pages import report
 from views.pages import settings
 
-# ── Page registry (must match sidebar PAGES keys) ─────────────────────────────
+# Page registry (must match sidebar PAGES keys) 
 PAGE_MAP = {
     "Dashboard": dashboard,
     "Risk Analysis": risk_analysis,
