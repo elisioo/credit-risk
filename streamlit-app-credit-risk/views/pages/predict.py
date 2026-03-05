@@ -186,7 +186,7 @@ def render():
                 # Download results
                 csv_out = results.to_csv(index=False)
                 st.download_button(
-                    "⬇️ Download Results CSV",
+                    "⬇ Download Results CSV",
                     data=csv_out,
                     file_name="prediction_results.csv",
                     mime="text/csv",
