@@ -13,7 +13,6 @@ from views.pages import risk_analysis
 from views.pages import borrower_data
 from views.pages import model
 from views.pages import predict
-from views.pages import report
 from views.pages import settings
 
 # Page registry (must match sidebar PAGES keys) 
@@ -23,7 +22,6 @@ PAGE_MAP = {
     "Borrower Data": borrower_data,
     "Model Performance": model,
     "Predictions": predict,
-    "Reports": report,
     "Settings": settings,
 }
 

@@ -10,7 +10,6 @@ PAGES = [
     "Borrower Data",
     "Risk Analysis",
     "Model Performance",
-    "Reports",
     "Settings",
 ]
 

@@ -17,11 +17,79 @@ def _state(key, default=None):
     return st.session_state[key]
 
 
+def _borrower_fields(defaults: dict):
+    """Render the shared borrower field inputs and return their current values."""
+    c1, c2, c3 = st.columns(3)
+    age         = c1.number_input("Age",               min_value=18, max_value=100, value=defaults.get("age", 35))
+    monthly_inc = c2.number_input("Monthly Income",    min_value=0.0, value=defaults.get("monthly_inc", 5000.0))
+    rev_util    = c3.number_input("Revolving Util.",   min_value=0.0, max_value=1.0, value=defaults.get("rev_util", 0.3),   step=0.01, format="%.3f")
+    debt_ratio  = c1.number_input("Debt Ratio",        min_value=0.0, max_value=1.0, value=defaults.get("debt_ratio", 0.3), step=0.01, format="%.3f")
+    open_credit = c2.number_input("Open Credit Lines", min_value=0, value=defaults.get("open_credit", 5))
+    real_estate = c3.number_input("Real Estate Loans", min_value=0, value=defaults.get("real_estate", 1))
+    late_30_59  = c1.number_input("Late 30-59 days",   min_value=0, value=defaults.get("late_30_59", 0))
+    late_60_89  = c2.number_input("Late 60-89 days",   min_value=0, value=defaults.get("late_60_89", 0))
+    late_90     = c3.number_input("Late 90+ days",     min_value=0, value=defaults.get("late_90", 0))
+    dependents  = c1.number_input("Dependents",        min_value=0, value=defaults.get("dependents", 0))
+    dlq_2yrs    = c2.selectbox("Delinquent 2yrs",      [0, 1],      index=defaults.get("dlq_2yrs", 0))
+    return dict(age=int(age), monthly_inc=float(monthly_inc), rev_util=float(rev_util),
+                debt_ratio=float(debt_ratio), open_credit=int(open_credit), real_estate=int(real_estate),
+                late_30_59=int(late_30_59), late_60_89=int(late_60_89), late_90=int(late_90),
+                dependents=int(dependents), dlq_2yrs=int(dlq_2yrs))
+
+
+# ── Modals ────────────────────────────────────────────────────────────────────
+
+@st.dialog("Add Borrower", width="large")
+def _dialog_add():
+    vals = _borrower_fields({})
+    st.divider()
+    _, sub, cancel, _ = st.columns([2, 1, 1, 2])
+    if sub.button("Save", type="primary", use_container_width=True):
+        new_id = add_borrower(**vals)
+        st.session_state["_bdata_action"] = f"Borrower #{new_id} added."
+        st.rerun()
+    if cancel.button("Cancel", use_container_width=True):
+        st.rerun()
+
+
+@st.dialog("Edit Borrower", width="large")
+def _dialog_edit(borrower_id, row):
+    st.caption(f"Editing record **#{borrower_id}**")
+    defaults = {k: row[k] for k in row.keys()}
+    vals = _borrower_fields(defaults)
+    st.divider()
+    _, sub, cancel, _ = st.columns([2, 1, 1, 2])
+    if sub.button("Update", type="primary", use_container_width=True):
+        update_borrower(borrower_id=borrower_id, **vals)
+        st.session_state["_bdata_action"] = f"Borrower #{borrower_id} updated."
+        st.rerun()
+    if cancel.button("Cancel", use_container_width=True):
+        st.rerun()
+
+
+@st.dialog("Delete Borrower")
+def _dialog_delete(borrower_id):
+    st.warning(f"Delete borrower **#{borrower_id}**? This cannot be undone.")
+    st.write("")
+    _, yes, no, _ = st.columns([1, 1, 1, 1])
+    if yes.button("Yes, delete", type="primary", use_container_width=True):
+        delete_borrower(borrower_id)
+        st.session_state["_bdata_action"] = f"Borrower #{borrower_id} deleted."
+        st.rerun()
+    if no.button("Cancel", use_container_width=True):
+        st.rerun()
+
+
 def render():
     init_db()  # no-op after first run
     page_header("Borrower Data", "Browse and manage individual borrower records")
 
-    # ── Toolbar ───────────────────────────────────────────────────────────────
+    if "_bdata_action" in st.session_state:
+        st.success(st.session_state.pop("_bdata_action"))
+    if "_bdata_warn" in st.session_state:
+        st.warning(st.session_state.pop("_bdata_warn"))
+
+    # Toolbar
     left_col, right_col = st.columns([5, 3])
 
     with left_col:
@@ -36,7 +104,7 @@ def render():
         edit_clicked = edit_col.button("Edit",   use_container_width=True)
         del_clicked  = del_col.button("Delete",  use_container_width=True)
 
-    # ── Pagination state ──────────────────────────────────────────────────────
+    # ── Pagination state 
     _state("bdata_page", 1)
     # Reset to page 1 when search/filter changes
     prev_search = _state("bdata_prev_search", "")
@@ -48,11 +116,11 @@ def render():
 
     current_page = st.session_state["bdata_page"]
 
-    # ── Fetch from SQLite ─────────────────────────────────────────────────────
+    # ── Fetch from SQLite
     df, total = fetch_page(current_page, search, risk_filter)
     total_pages = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
 
-    # ── Table ─────────────────────────────────────────────────────────────────
+    # ── Table 
     with st.container(border=True):
         # Pagination controls inside the box
         pg_info, prev_btn, pg_num, next_btn = st.columns([4, 1, 1, 1])
@@ -99,100 +167,24 @@ def render():
     selected_rows = selection.selection.get("rows", [])
     selected_id   = int(df.iloc[selected_rows[0]]["id"]) if selected_rows else None
 
-    # ── ADD ───────────────────────────────────────────────────────────────────
+    # ADD 
     if add_clicked:
-        st.session_state["crud_mode"] = "add"
+        _dialog_add()
 
-    if st.session_state.get("crud_mode") == "add":
-        with st.form("form_add", border=True):
-            st.subheader("Add Borrower")
-            c1, c2, c3 = st.columns(3)
-            age         = c1.number_input("Age",               min_value=18, max_value=100, value=35)
-            monthly_inc = c2.number_input("Monthly Income",    min_value=0.0, value=5000.0)
-            rev_util    = c3.number_input("Revolving Util.",   min_value=0.0, max_value=1.0, value=0.3, step=0.01, format="%.3f")
-            debt_ratio  = c1.number_input("Debt Ratio",        min_value=0.0, max_value=1.0, value=0.3, step=0.01, format="%.3f")
-            open_credit = c2.number_input("Open Credit Lines", min_value=0, value=5)
-            real_estate = c3.number_input("Real Estate Loans", min_value=0, value=1)
-            late_30_59  = c1.number_input("Late 30-59 days",   min_value=0, value=0)
-            late_60_89  = c2.number_input("Late 60-89 days",   min_value=0, value=0)
-            late_90     = c3.number_input("Late 90+ days",     min_value=0, value=0)
-            dependents  = c1.number_input("Dependents",        min_value=0, value=0)
-            dlq_2yrs    = c2.selectbox("Delinquent 2yrs",      [0, 1])
-
-            sub, cancel = st.columns(2)
-            if sub.form_submit_button("Save", type="primary"):
-                new_id = add_borrower(
-                    age=int(age), rev_util=float(rev_util), debt_ratio=float(debt_ratio),
-                    monthly_inc=float(monthly_inc), open_credit=int(open_credit),
-                    late_90=int(late_90), dlq_2yrs=int(dlq_2yrs),
-                    late_30_59=int(late_30_59), late_60_89=int(late_60_89),
-                    real_estate=int(real_estate), dependents=int(dependents),
-                )
-                st.session_state["crud_mode"] = None
-                st.success(f"Borrower #{new_id} added.")
-                st.rerun()
-            if cancel.form_submit_button("Cancel"):
-                st.session_state["crud_mode"] = None
-                st.rerun()
-
-    # ── EDIT ──────────────────────────────────────────────────────────────────
+    # EDIT 
     if edit_clicked:
         if selected_id:
-            st.session_state["crud_mode"] = "edit"
+            row = fetch_one(selected_id)
+            if row:
+                _dialog_edit(selected_id, row)
         else:
-            st.warning("Select a row to edit.")
+            st.session_state["_bdata_warn"] = "Select a row to edit."
+            st.rerun()
 
-    if st.session_state.get("crud_mode") == "edit" and selected_id:
-        row = fetch_one(selected_id)
-        if row:
-            with st.form("form_edit", border=True):
-                st.subheader(f"Edit Borrower #{selected_id}")
-                c1, c2, c3 = st.columns(3)
-                age         = c1.number_input("Age",               min_value=18, max_value=100, value=int(row["age"]))
-                monthly_inc = c2.number_input("Monthly Income",    min_value=0.0, value=float(row["monthly_inc"]))
-                rev_util    = c3.number_input("Revolving Util.",   min_value=0.0, max_value=1.0, value=float(row["rev_util"]), step=0.01, format="%.3f")
-                debt_ratio  = c1.number_input("Debt Ratio",        min_value=0.0, max_value=1.0, value=float(row["debt_ratio"]), step=0.01, format="%.3f")
-                open_credit = c2.number_input("Open Credit Lines", min_value=0, value=int(row["open_credit"]))
-                real_estate = c3.number_input("Real Estate Loans", min_value=0, value=int(row["real_estate"]))
-                late_30_59  = c1.number_input("Late 30-59 days",   min_value=0, value=int(row["late_30_59"]))
-                late_60_89  = c2.number_input("Late 60-89 days",   min_value=0, value=int(row["late_60_89"]))
-                late_90     = c3.number_input("Late 90+ days",     min_value=0, value=int(row["late_90"]))
-                dependents  = c1.number_input("Dependents",        min_value=0, value=int(row["dependents"]))
-                dlq_2yrs    = c2.selectbox("Delinquent 2yrs",      [0, 1], index=int(row["dlq_2yrs"]))
-
-                sub, cancel = st.columns(2)
-                if sub.form_submit_button("Update", type="primary"):
-                    update_borrower(
-                        borrower_id=selected_id,
-                        age=int(age), rev_util=float(rev_util), debt_ratio=float(debt_ratio),
-                        monthly_inc=float(monthly_inc), open_credit=int(open_credit),
-                        late_90=int(late_90), dlq_2yrs=int(dlq_2yrs),
-                        late_30_59=int(late_30_59), late_60_89=int(late_60_89),
-                        real_estate=int(real_estate), dependents=int(dependents),
-                    )
-                    st.session_state["crud_mode"] = None
-                    st.success(f"Borrower #{selected_id} updated.")
-                    st.rerun()
-                if cancel.form_submit_button("Cancel"):
-                    st.session_state["crud_mode"] = None
-                    st.rerun()
-
-    # ── DELETE ────────────────────────────────────────────────────────────────
+    # ── DELETE 
     if del_clicked:
         if selected_id:
-            st.session_state["crud_mode"] = "delete"
+            _dialog_delete(selected_id)
         else:
-            st.warning("Select a row to delete.")
-
-    if st.session_state.get("crud_mode") == "delete" and selected_id:
-        with st.container(border=True):
-            st.warning(f"Delete borrower **#{selected_id}**? This cannot be undone.")
-            c1, c2 = st.columns(2)
-            if c1.button("Yes, delete", type="primary"):
-                delete_borrower(selected_id)
-                st.session_state["crud_mode"] = None
-                st.success(f"Borrower #{selected_id} deleted.")
-                st.rerun()
-            if c2.button("Cancel"):
-                st.session_state["crud_mode"] = None
-                st.rerun()
+            st.session_state["_bdata_warn"] = "Select a row to delete."
+            st.rerun()

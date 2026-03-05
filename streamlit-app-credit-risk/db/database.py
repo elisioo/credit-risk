@@ -10,17 +10,48 @@ does not exist).  All CRUD operations go through this module so the page
 code stays clean.
 """
 
+import json
 import os
 import sqlite3
 import pandas as pd
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 
-_BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # project root
-DB_PATH  = os.path.join(_BASE, "data", "borrowers.db")
-CSV_PATH = os.path.join(_BASE, "data", "Credit_Risk_Benchmark_Dataset.csv")
+_BASE         = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # project root
+DB_PATH       = os.path.join(_BASE, "data", "borrowers.db")
+CSV_PATH      = os.path.join(_BASE, "data", "Credit_Risk_Benchmark_Dataset.csv")
+SETTINGS_PATH = os.path.join(_BASE, "data", "settings.json")
 
-PAGE_SIZE = 50  # rows per page
+PAGE_SIZE = 50  # rows per page (overridden by settings at runtime)
+
+_DEFAULTS = {
+    "page_size":             50,
+    "rev_util_threshold":    0.60,
+    "debt_ratio_threshold":  0.50,
+    "app_name":              "Credalytix",
+    "version":               "v1.1.1",
+}
+
+
+# ── Settings store ────────────────────────────────────────────────────────────
+
+def get_settings() -> dict:
+    """Load settings from JSON, filling missing keys with defaults."""
+    if os.path.exists(SETTINGS_PATH):
+        try:
+            with open(SETTINGS_PATH) as f:
+                stored = json.load(f)
+            return {**_DEFAULTS, **stored}
+        except Exception:
+            pass
+    return dict(_DEFAULTS)
+
+
+def save_settings(settings: dict) -> None:
+    """Persist settings to JSON."""
+    os.makedirs(os.path.dirname(SETTINGS_PATH), exist_ok=True)
+    with open(SETTINGS_PATH, "w") as f:
+        json.dump(settings, f, indent=2)
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
@@ -31,10 +62,16 @@ def _conn() -> sqlite3.Connection:
     return con
 
 
-def _derive_risk(rev_util: float, debt_ratio: float, dlq: int) -> str:
+def _derive_risk(rev_util: float, debt_ratio: float, dlq: int,
+                 rev_thresh: float = None,
+                 debt_thresh: float = None) -> str:
+    if rev_thresh is None or debt_thresh is None:
+        cfg = get_settings()
+        rev_thresh  = cfg["rev_util_threshold"]
+        debt_thresh = cfg["debt_ratio_threshold"]
     if dlq == 1:
         return "High"
-    if rev_util > 0.60 or debt_ratio > 0.50:
+    if rev_util > rev_thresh or debt_ratio > debt_thresh:
         return "Medium"
     return "Low"
 
@@ -172,6 +209,21 @@ def fetch_stats() -> dict:
     }
 
 
+def fetch_all() -> pd.DataFrame:
+    """Return every borrower row for analysis / charting."""
+    with _conn() as con:
+        rows = con.execute(
+            """
+            SELECT id, age, rev_util, debt_ratio, monthly_inc,
+                   open_credit, late_90, dlq_2yrs, risk_level,
+                   late_30_59, late_60_89, real_estate, dependents
+            FROM borrowers
+            ORDER BY id
+            """
+        ).fetchall()
+    return pd.DataFrame([dict(r) for r in rows]) if rows else pd.DataFrame()
+
+
 def fetch_recent(limit: int = 5) -> pd.DataFrame:
     """Return the most recently added borrowers."""
     with _conn() as con:
@@ -249,3 +301,32 @@ def fetch_one(borrower_id: int) -> dict | None:
             "SELECT * FROM borrowers WHERE id=?", (borrower_id,)
         ).fetchone()
     return dict(row) if row else None
+
+
+# ── Bulk risk recalculation ───────────────────────────────────────────────────
+
+def rebuild_risk_levels() -> int:
+    """Recompute risk_level for every row using the current threshold settings.
+    Returns the number of rows updated."""
+    cfg         = get_settings()
+    rev_thresh  = cfg["rev_util_threshold"]
+    debt_thresh = cfg["debt_ratio_threshold"]
+    with _conn() as con:
+        rows = con.execute(
+            "SELECT id, rev_util, debt_ratio, dlq_2yrs FROM borrowers"
+        ).fetchall()
+        updates = [
+            (_derive_risk(r["rev_util"], r["debt_ratio"], r["dlq_2yrs"],
+                          rev_thresh, debt_thresh), r["id"])
+            for r in rows
+        ]
+        con.executemany("UPDATE borrowers SET risk_level=? WHERE id=?", updates)
+    return len(updates)
+
+
+# ── Database reset ────────────────────────────────────────────────────────────
+
+def reset_db() -> None:
+    """Delete the database file so init_db() will reseed on next call."""
+    if os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
