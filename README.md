@@ -8,15 +8,15 @@ Credalytix provides an interactive dashboard that allows users to analyze credit
 
 ## Features
 
-| Page | Description |
-|---|---|
-| **Dashboard** | Overview of key metrics, risk distribution, and model performance trends |
-| **Predictions** | Single or batch (CSV upload) credit risk prediction using a trained ML model |
-| **Borrower Data** | Browse, search, add, edit, and delete borrower records (SQLite-backed) |
-| **Risk Analysis** | Visual analysis of risk factors and trends |
-| **Model Performance** | Evaluation metrics and performance charts |
-| **Reports** | Generate and view reports |
-| **Settings** | Application configuration |
+| Page                  | Description                                                                  |
+| --------------------- | ---------------------------------------------------------------------------- |
+| **Dashboard**         | Overview of key metrics, risk distribution, and model performance trends     |
+| **Predictions**       | Single or batch (CSV upload) credit risk prediction using a trained ML model |
+| **Borrower Data**     | Browse, search, add, edit, and delete borrower records (SQLite-backed)       |
+| **Risk Analysis**     | Visual analysis of risk factors and trends                                   |
+| **Model Performance** | Evaluation metrics and performance charts                                    |
+| **Reports**           | Generate and view reports                                                    |
+| **Settings**          | Application configuration                                                    |
 
 ## Tech Stack
 
@@ -85,20 +85,20 @@ The app will open at `http://localhost:8501`.
 
 The prediction page uses a pre-trained Gradient Boosting model (`credit_risk_model.pkl`) with 10 input features:
 
-| Feature | Description |
-|---|---|
-| `rev_util` | Revolving credit utilization rate (0–1) |
-| `age` | Borrower's age |
-| `late_30_59` | Times 30-59 days past due (last 2 years) |
-| `debt_ratio` | Monthly debt payments / gross income |
-| `monthly_inc` | Gross monthly income |
-| `open_credit` | Number of open credit lines |
-| `late_90` | Times 90+ days past due (last 2 years) |
-| `real_estate` | Number of real estate loans |
-| `late_60_89` | Times 60-89 days past due (last 2 years) |
-| `dependents` | Number of dependents |
+| Feature       | Description                              |
+| ------------- | ---------------------------------------- |
+| `rev_util`    | Revolving credit utilization rate (0–1)  |
+| `age`         | Borrower's age                           |
+| `late_30_59`  | Times 30-59 days past due (last 2 years) |
+| `debt_ratio`  | Monthly debt payments / gross income     |
+| `monthly_inc` | Gross monthly income                     |
+| `open_credit` | Number of open credit lines              |
+| `late_90`     | Times 90+ days past due (last 2 years)   |
+| `real_estate` | Number of real estate loans              |
+| `late_60_89`  | Times 60-89 days past due (last 2 years) |
+| `dependents`  | Number of dependents                     |
 
-## Authors
+## Creators
 
 **Francisco | Soroño**
 
