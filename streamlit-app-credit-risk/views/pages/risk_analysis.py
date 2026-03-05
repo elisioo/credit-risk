@@ -207,18 +207,12 @@ def render():
             st.caption("Age Group Breakdown by Risk")
             st.plotly_chart(_age_distribution(df), use_container_width=True, config={"displayModeBar": False})
 
-    # ── Row 2: Scatter | Late payments ────────────────────────────────────────
-    r2c1, r2c2 = st.columns(2)
-    with r2c1:
-        with st.container(border=True):
-            st.caption("Debt Ratio vs Revolving Utilization")
-            st.plotly_chart(_scatter_debt_rev(df), use_container_width=True, config={"displayModeBar": False})
-    with r2c2:
-        with st.container(border=True):
-            st.caption("Avg Late Payments by Risk Level")
-            st.plotly_chart(_late_payment_bar(df), use_container_width=True, config={"displayModeBar": False})
+    # ── Row 2: Late payments (full width) ────────────────────────────────────
+    with st.container(border=True):
+        st.caption("Avg Late Payments by Risk Level")
+        st.plotly_chart(_late_payment_bar(df), use_container_width=True, config={"displayModeBar": False})
 
-    # ── Row 3: Income box | Avg metrics bar ──────────────────────────────────
+    # ── Row 3: Income box | Avg metrics bar
     r3c1, r3c2 = st.columns(2)
     with r3c1:
         with st.container(border=True):
