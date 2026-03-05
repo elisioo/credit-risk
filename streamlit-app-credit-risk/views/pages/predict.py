@@ -159,7 +159,7 @@ def render():
                 results["prediction"] = np.where(preds == 1, "DEFAULT", "NO DEFAULT")
                 results["default_prob_%"] = np.round(probas[:, 1] * 100, 1)
                 results["risk_level"] = results["default_prob_%"].apply(
-                    lambda p: "🟢 Low" if p < 30 else ("🟡 Moderate" if p < 60 else "🔴 High")
+                    lambda p: "Low" if p < 30 else ("Moderate" if p < 60 else "High")
                 )
 
                 # Summary metrics
