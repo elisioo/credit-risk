@@ -14,7 +14,7 @@ def _load_data() -> pd.DataFrame:
     return fetch_all()
 
 
-# ── Chart helpers ─────────────────────────────────────────────────────────────
+# ── Chart helpers 
 
 def _risk_donut(df: pd.DataFrame) -> go.Figure:
     counts = df["risk_level"].value_counts().reindex(RISK_ORDER, fill_value=0)
@@ -61,28 +61,6 @@ def _age_distribution(df: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def _scatter_debt_rev(df: pd.DataFrame) -> go.Figure:
-    # Sample for performance (max 3 000 points per group)
-    fig = go.Figure()
-    for risk in RISK_ORDER:
-        sub = df[df["risk_level"] == risk].sample(
-            n=min(3000, len(df[df["risk_level"] == risk])), random_state=42
-        )
-        fig.add_trace(go.Scatter(
-            x=sub["debt_ratio"], y=sub["rev_util"],
-            mode="markers", name=risk,
-            marker=dict(color=RISK_COLORS[risk], size=4, opacity=0.45),
-            hovertemplate="Debt Ratio: %{x:.3f}<br>Rev Util: %{y:.3f}<extra></extra>",
-        ))
-    fig.update_layout(
-        height=300,
-        margin=dict(t=10, b=10, l=10, r=10),
-        xaxis_title="Debt Ratio", yaxis_title="Revolving Utilization",
-        legend=dict(orientation="h", y=-0.25),
-        xaxis=dict(range=[0, min(df["debt_ratio"].quantile(0.99), 2)]),
-        yaxis=dict(range=[0, 1.05]),
-    )
-    return fig
 
 
 def _late_payment_bar(df: pd.DataFrame) -> go.Figure:
