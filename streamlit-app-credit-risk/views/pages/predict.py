@@ -293,12 +293,31 @@ def render():
 
     #  TAB 4 – Uploaded / stored datasets
 
+    @st.dialog("Confirm Upload to Borrower Data", width="large")
+    def _confirm_upload(df):
+        st.write(f"You are about to save **{len(df):,}** rows into **Borrower Data**. This cannot be undone.")
+        st.dataframe(df.head(10), use_container_width=True, hide_index=True)
+        if len(df) > 10:
+            st.caption(f"… and {len(df) - 10:,} more rows.")
+        st.divider()
+        _, confirm_btn, cancel_btn, _ = st.columns([2, 1, 1, 2])
+        if confirm_btn.button("Confirm", type="primary", use_container_width=True, key="upload_confirm_yes"):
+            count = bulk_insert_borrowers(df)
+            insert_dataframe(df)
+            st.session_state["_upload_success"] = count
+            st.rerun()
+        if cancel_btn.button("Cancel", use_container_width=True, key="upload_confirm_no"):
+            st.rerun()
+
     with tab_uploaded:
         st.subheader("Upload & Store Datasets")
         st.markdown(
-            "Upload a CSV file to store it in the application database. "
-            "This keeps your custom datasets separate from the original benchmark data."
+            "Upload a CSV file to store it in **Borrower Data** and the dataset store. "
+            "You will be asked to confirm before any rows are saved."
         )
+
+        if "_upload_success" in st.session_state:
+            st.success(f"Saved **{st.session_state.pop('_upload_success'):,}** rows to Borrower Data!")
 
         upload_csv = st.file_uploader(
             "Choose a CSV file to upload",
@@ -318,9 +337,8 @@ def render():
                 st.caption(f"Preview – **{len(up_df):,}** rows")
                 st.dataframe(up_df.head(50), use_container_width=True, hide_index=True)
 
-                if st.button("Upload to Database", type="primary", key="btn_store_csv"):
-                    count = insert_dataframe(up_df)
-                    st.success(f"Stored **{count:,}** rows successfully!")
+                if st.button("Save to Borrower Data", type="primary", key="btn_store_csv"):
+                    _confirm_upload(up_df)
 
         st.divider()
         st.subheader("Stored Dataset Records")
