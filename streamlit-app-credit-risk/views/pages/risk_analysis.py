@@ -207,7 +207,7 @@ def render():
             st.caption("Age Group Breakdown by Risk")
             st.plotly_chart(_age_distribution(df), use_container_width=True, config={"displayModeBar": False})
 
-    # ── Row 2: Late payments (full width) ────────────────────────────────────
+    # ── Row 2: Late payments 
     with st.container(border=True):
         st.caption("Avg Late Payments by Risk Level")
         st.plotly_chart(_late_payment_bar(df), use_container_width=True, config={"displayModeBar": False})
@@ -223,7 +223,7 @@ def render():
             st.caption("Avg Debt Ratio & Rev Utilization by Risk Level")
             st.plotly_chart(_avg_metrics_bar(df), use_container_width=True, config={"displayModeBar": False})
 
-    # ── Segment summary table ─────────────────────────────────────────────────
+    # ── Segment summary table
     with st.container(border=True):
         st.caption("Risk Segment Summary")
         st.dataframe(

@@ -14,11 +14,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from views.main.layout import page_header
-from db.database import init_db, fetch_all
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
+# ── Paths ───────────────────────────────────────────────────────────────────────
 _BASE       = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _MODEL_PATH = os.path.join(_BASE, "models", "credit_risk_model.pkl")
+_CSV_PATH   = os.path.join(_BASE, "data", "Credit_Risk_Benchmark_Dataset.csv")
 
 _FEATURE_COLS = [
     "rev_util", "age", "late_30_59", "debt_ratio", "monthly_inc",
@@ -194,12 +194,16 @@ def _metric_comparison_chart(evals):
 # ── Render ────────────────────────────────────────────────────────────────────
 
 def render():
-    init_db()
     page_header("Model Performance", "Understand, evaluate, and trust the credit-risk prediction model")
 
-    df = fetch_all()
-    if df.empty or _TARGET_COL not in df.columns:
-        st.warning("No borrower data found. Seed the database first via the Borrower Data page.")
+    if not os.path.exists(_CSV_PATH):
+        st.error(f"Benchmark dataset not found at `{_CSV_PATH}`.")
+        return
+
+    df = pd.read_csv(_CSV_PATH)
+    df.columns = [c.strip().lower() for c in df.columns]
+    if _TARGET_COL not in df.columns:
+        st.error(f"Column `{_TARGET_COL}` not found in the benchmark CSV.")
         return
 
     results = _evaluate_all(df.to_json())

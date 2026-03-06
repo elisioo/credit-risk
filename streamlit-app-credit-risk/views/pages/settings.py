@@ -5,7 +5,7 @@ from db.database import (
     init_db, fetch_stats, fetch_all,
     get_settings, save_settings,
     rebuild_risk_levels, reset_db,
-    DB_PATH, CSV_PATH, SETTINGS_PATH, _DEFAULTS,
+    DB_PATH, SETTINGS_PATH, _DEFAULTS,
 )
 
 

@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartWallet Conceptual Framework</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap");
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background: #f0ece8;
+        background-image: radial-gradient(#d6cfc8 1px, transparent 1px);
+        background-size: 22px 22px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 40px 20px 60px;
+        min-height: 100vh;
+      }
+
+      .wrapper {
+        width: 860px;
+      }
+
+      /* TITLE */
+      .title-box {
+        background: #2d2d2d;
+        color: #fff;
+        text-align: center;
+        padding: 16px 40px;
+        border-radius: 12px;
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin: 0 auto 36px;
+        width: fit-content;
+        box-shadow: 5px 5px 0px #999;
+      }
+
+      /* IPO ROW */
+      .ipo-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+
+      .card {
+        flex: 1;
+        border-radius: 10px;
+        padding: 18px 16px 20px;
+        box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.18);
+        position: relative;
+      }
+
+      .card-title {
+        text-align: center;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+        color: #2d2d2d;
+      }
+
+      .card ul {
+        list-style: disc;
+        padding-left: 18px;
+      }
+
+      .card ul li {
+        font-size: 11.5px;
+        line-height: 1.55;
+        margin-bottom: 7px;
+        color: #1e1e1e;
+      }
+
+      /* Colors */
+      .input-card {
+        background: #c8f0a0;
+      } /* green */
+      .process-card {
+        background: #fce8a0;
+      } /* yellow */
+      .output-card {
+        background: #a8d8f0;
+      } /* blue */
+
+      /* ARROWS between cards */
+      .arrow-col {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-top: 60px;
+        flex: 0 0 32px;
+      }
+
+      .arrow {
+        font-size: 28px;
+        color: #555;
+        font-weight: 900;
+      }
+
+      /* TECH STACK */
+      .tech-section {
+        margin-top: 10px;
+      }
+
+      .tech-title {
+        text-align: center;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+        color: #2d2d2d;
+      }
+
+      .tech-bar {
+        background: #f5b8c8;
+        border-radius: 10px;
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.18);
+      }
+
+      .tech-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .tech-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 800;
+      }
+
+      .tech-label {
+        font-size: 9px;
+        font-weight: 600;
+        color: #2d2d2d;
+        text-align: center;
+        letter-spacing: 0.3px;
+      }
+
+      /* Tech icon colors */
+      .t-esp32 {
+        background: #e8473f;
+        color: #fff;
+        font-size: 10px;
+      }
+      .t-flutter {
+        background: #54c5f8;
+        color: #fff;
+      }
+      .t-firebase {
+        background: #ffca28;
+        color: #fff;
+      }
+      .t-tflite {
+        background: #ff6f00;
+        color: #fff;
+        font-size: 9px;
+      }
+      .t-arduino {
+        background: #00979d;
+        color: #fff;
+        font-size: 9px;
+      }
+      .t-python {
+        background: #3776ab;
+        color: #fff;
+      }
+      .t-sklearn {
+        background: #f7931e;
+        color: #fff;
+        font-size: 9px;
+      }
+      .t-android {
+        background: #3ddc84;
+        color: #fff;
+        font-size: 9px;
+      }
+
+      /* SVG icons inline */
+      svg.icon {
+        width: 26px;
+        height: 26px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <!-- TITLE -->
+      <div class="title-box">Conceptual Framework</div>
+
+      <!-- IPO ROW -->
+      <div class="ipo-row">
+        <!-- INPUT -->
+        <div class="card input-card">
+          <div class="card-title">Input</div>
+          <ul>
+            <li>
+              RGB color spectral readings from Philippine Peso banknotes
+              (TCS34725)
+            </li>
+            <li>RFID UID scans from tagged cards and items (RC522)</li>
+            <li>BLE RSSI signal strength from smartphone</li>
+            <li>Timestamp of each insertion / removal event</li>
+            <li>User account and wallet profile data</li>
+            <li>GPS coordinates via mobile app (last known location)</li>
+          </ul>
+        </div>
+
+        <!-- ARROW 1 -->
+        <div class="arrow-col"><div class="arrow">&#8594;</div></div>
+
+        <!-- PROCESS -->
+        <div class="card process-card">
+          <div class="card-title">Process</div>
+          <ul>
+            <li>
+              On-device K-NN / TFLite AI model classifies banknote denomination
+              from RGB values
+            </li>
+            <li>
+              ESP32 firmware detects RFID tag insert / remove events and weight
+              threshold triggers
+            </li>
+            <li>
+              BLE RSSI computation determines proximity; separation alert logic
+              evaluates threshold
+            </li>
+            <li>
+              Event payloads (denomination, UID, timestamp) packaged and
+              transmitted to Firebase via Wi-Fi
+            </li>
+            <li>
+              ESP32 deep sleep duty-cycle manages power consumption between
+              events
+            </li>
+            <li>
+              Firebase Cloud Functions process incoming events and dispatch FCM
+              push notifications
+            </li>
+            <li>
+              Mobile app aggregates and visualizes data from Firestore real-time
+              listeners
+            </li>
+          </ul>
+        </div>
+
+        <!-- ARROW 2 -->
+        <div class="arrow-col"><div class="arrow">&#8594;</div></div>
+
+        <!-- OUTPUT -->
+        <div class="card output-card">
+          <div class="card-title">Output</div>
+          <ul>
+            <li>
+              Identified Philippine Peso denomination per bill inserted (₱20 –
+              ₱1,000)
+            </li>
+            <li>Real-time wallet content list (cards + cash total value)</li>
+            <li>
+              Separation alert push notification when wallet exceeds BLE range
+            </li>
+            <li>
+              Chronological spending history log with denomination and timestamp
+            </li>
+            <li>Cloud-synchronized data accessible across multiple devices</li>
+            <li>
+              Analytics dashboard showing cash flow trends and usage patterns
+            </li>
+            <li>Geospatial last-seen location of the wallet</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- TECH STACK -->
+      <div class="tech-section">
+        <div class="tech-title">Tech Stack</div>
+        <div class="tech-bar">
+          <div class="tech-item">
+            <div class="tech-icon t-esp32">ESP<br />32</div>
+            <div class="tech-label">ESP32<br />Microcontroller</div>
+          </div>
+
+          <div class="tech-item">
+            <div class="tech-icon t-arduino">C++</div>
+            <div class="tech-label">Arduino<br />IDE / C++</div>
+          </div>
+
+          <div class="tech-item">
+            <div class="tech-icon t-tflite">TF<br />Lite</div>
+            <div class="tech-label">TensorFlow<br />Lite Micro</div>
+          </div>
+
+          <div class="tech-item">
+            <div class="tech-icon t-sklearn">K-NN</div>
+            <div class="tech-label">scikit-learn<br />(Python)</div>
+          </div>
+
+          <div class="tech-item">
+            <div class="tech-icon t-python">
+              <!-- Python snake icon simplified -->
+              <svg viewBox="0 0 24 24" fill="white" class="icon">
+                <path
+                  d="M11.914 0C5.82 0 6.2 2.656 6.2 2.656l.007 2.752h5.814v.826H3.9S0 5.789 0 11.969c0 6.18 3.403 5.963 3.403 5.963h2.032v-2.867s-.109-3.41 3.35-3.41h5.77s3.24.052 3.24-3.13V3.19S18.28 0 11.914 0zm-3.21 1.839a1.047 1.047 0 110 2.094 1.047 1.047 0 010-2.094z"
+                />
+                <path
+                  d="M12.086 24c6.094 0 5.714-2.656 5.714-2.656l-.007-2.752h-5.814v-.826h8.121S24 18.211 24 12.031c0-6.18-3.403-5.963-3.403-5.963h-2.032v2.867s.109 3.41-3.35 3.41h-5.77s-3.24-.052-3.24 3.13v5.305S5.72 24 12.086 24zm3.21-1.839a1.047 1.047 0 110-2.094 1.047 1.047 0 010 2.094z"
+                />
+              </svg>
+            </div>
+            <div class="tech-label">Python<br />3.x</div>
+          </div>
+
+          <div class="tech-item">
+            <div class="tech-icon t-flutter">
+              <svg viewBox="0 0 24 24" fill="white" class="icon">
+                <path
+                  d="M14.314 0L2.3 12 6 15.7 21.684.013zM14.314 11.97l-4.4 4.4 4.4 4.43 7.37-4.43z"
+                />
+              </svg>
+            </div>
+            <div class="tech-label">React Native<br />Mobile App</div>
+          </div>
+
+          <div class="tech-item">
+            <div class="tech-icon t-firebase">
+              <svg viewBox="0 0 24 24" fill="white" class="icon">
+                <path
+                  d="M3.89 15.672L6.255.461A.341.341 0 016.59.25a.338.338 0 01.309.2l2.456 4.728zM16.06 5.696a.343.343 0 00-.329-.228.34.34 0 00-.316.21l-1.597 3.756-5.534-10.6a.336.336 0 00-.304-.19.347.347 0 00-.335.329L7.13 15.837l5.862 3.306a1.013 1.013 0 001.03 0l5.86-3.306z"
+                />
+              </svg>
+            </div>
+            <div class="tech-label">Firebase<br />Firestore + FCM</div>
+          </div>
+
+          <div class="tech-item">
+            <div class="tech-icon t-android">BLE</div>
+            <div class="tech-label">Bluetooth<br />Low Energy</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
