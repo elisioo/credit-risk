@@ -141,7 +141,7 @@ def render():
             # Show input row with predicted dlq_2yrs highlighted
             display_row = res["row"].copy()
             display_row["dlq_2yrs"] = res["pred"]
-            styled = display_row.style.applymap(
+            styled = display_row.style.map(
                 lambda _: "background-color: #fff3cd; font-weight: bold;",
                 subset=["dlq_2yrs"],
             )
@@ -221,7 +221,7 @@ def render():
 
                     # Highlight predicted columns
                     highlight_cols = ["dlq_2yrs", "prediction", "default_prob_%", "risk_level"]
-                    styled_results = results.style.applymap(
+                    styled_results = results.style.map(
                         lambda _: "background-color: #fff3cd; font-weight: bold;",
                         subset=[c for c in highlight_cols if c in results.columns],
                     )
@@ -423,8 +423,8 @@ def render():
                 return mapping.get(val, "")
 
             styled_hist = hist_df.style \
-                .applymap(_color_prediction, subset=["prediction"]) \
-                .applymap(_color_risk, subset=["risk_level"])
+                .map(_color_prediction, subset=["prediction"]) \
+                .map(_color_risk, subset=["risk_level"])
 
             st.dataframe(
                 styled_hist,
