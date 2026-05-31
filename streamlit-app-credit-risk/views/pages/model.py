@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from io import StringIO
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
@@ -51,7 +52,7 @@ def _load_saved_model():
 
 @st.cache_data(ttl=3600, show_spinner="Evaluating models… this may take a moment.")
 def _evaluate_all(df_json: str):
-    df = pd.read_json(df_json)
+    df = pd.read_json(StringIO(df_json))
     X  = df[_FEATURE_COLS].fillna(0)
     y  = df[_TARGET_COL].astype(int)
 
