@@ -2,9 +2,13 @@
 
 A Streamlit-based web application for credit risk prediction and borrower management, built as a school project.
 
+Streamlit link:
+https://credalytix.streamlit.app/
+
 ## Overview
 
 Credalytix provides an interactive dashboard that allows users to analyze credit risk data, manage borrower records, and run real-time default predictions using a trained machine learning model.
+
 
 ## Features
 
