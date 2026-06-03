@@ -23,10 +23,16 @@ RISK_BADGE = {"High": "High", "Medium": "Medium", "Low": "Low"}
 @st.cache_resource
 def _load_model():
     if not os.path.exists(_MODEL_PATH):
+        st.warning(f"Model file not found: {_MODEL_PATH}")
         return None
-    with open(_MODEL_PATH, "rb") as f:
-        return pickle.load(f)
 
+    try:
+        with open(_MODEL_PATH, "rb") as f:
+            return pickle.load(f)
+    except Exception as e:
+        st.error("Model file was found, but it could not be loaded.")
+        st.exception(e)
+        return None
 
 # ── Chart builders ─────────────────────────────────────────────────────────────
 
