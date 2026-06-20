@@ -15,6 +15,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from views.main.layout import page_header
+from utils.model_compat import ensure_sklearn_loss_compat
 
 # ── Paths ───────────────────────────────────────────────────────────────────────
 _BASE       = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -46,6 +47,7 @@ _TARGET_COL = "dlq_2yrs"
 def _load_saved_model():
     if not os.path.exists(_MODEL_PATH):
         return None
+    ensure_sklearn_loss_compat()
     with open(_MODEL_PATH, "rb") as f:
         return pickle.load(f)
 

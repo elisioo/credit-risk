@@ -8,6 +8,7 @@ from db.dataset_generator import generate_dataset
 from db.uploaded_datasets import insert_dataframe, fetch_all as fetch_uploaded, row_count as uploaded_count, clear_all as clear_uploaded
 from db.database import bulk_insert as bulk_insert_borrowers
 from db.predictions_history import log_single, log_batch, fetch_history, total_count, clear_history
+from utils.model_compat import ensure_sklearn_loss_compat
 
 # Model path 
 _BASE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -23,6 +24,7 @@ FEATURE_COLS = [
 def _load_model():
     if not os.path.exists(MODEL_PATH):
         return None
+    ensure_sklearn_loss_compat()
     with open(MODEL_PATH, "rb") as f:
         return pickle.load(f)
 

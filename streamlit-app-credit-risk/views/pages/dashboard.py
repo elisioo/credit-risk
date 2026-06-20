@@ -7,6 +7,7 @@ import os
 
 from views.main.layout import page_header
 from db.database import init_db, fetch_stats, fetch_recent
+from utils.model_compat import ensure_sklearn_loss_compat
 
 # ── Model path ────────────────────────────────────────────────────────────────
 _BASE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -27,6 +28,7 @@ def _load_model():
         return None
 
     try:
+        ensure_sklearn_loss_compat()
         with open(_MODEL_PATH, "rb") as f:
             return pickle.load(f)
     except Exception as e:

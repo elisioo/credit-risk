@@ -10,6 +10,7 @@ from db.database import (
     apply_prediction,
     PAGE_SIZE,
 )
+from utils.model_compat import ensure_sklearn_loss_compat
 
 _MODEL_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
@@ -24,6 +25,7 @@ _FEATURE_COLS = [
 def _load_model():
     if not os.path.exists(_MODEL_PATH):
         return None
+    ensure_sklearn_loss_compat()
     with open(_MODEL_PATH, "rb") as f:
         return pickle.load(f)
 
